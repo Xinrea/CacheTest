@@ -27,7 +27,7 @@
 #include <errno.h>
 #include "cachelab.h"
 
-//#define DEBUG_ON 
+#define DEBUG_ON 
 #define ADDRESS_LENGTH 64
 
 /* Type: Memory address */
@@ -93,6 +93,10 @@ void initCache()
 void freeCache()
 {
     int i;
+    for (i=0; i<S; i++){
+        free(cache[i]);
+    }
+    free(cache);
 }
 
 
@@ -109,9 +113,42 @@ void accessData(mem_addr_t addr)
     unsigned int eviction_line = 0;
     mem_addr_t set_index = (addr >> b) & set_index_mask;
     mem_addr_t tag = addr >> (s+b);
-
     cache_set_t cache_set = cache[set_index];
 
+    for(i=0; i<S; i++){
+        for(int k=0; k<E; k++){
+            if(cache[i][k].valid)cache[i][k].lru--;
+        }
+    }
+
+    for(i=0; i<E; i++) {
+        if (tag == cache_set[i].tag) { // hit
+            cache_set[i].lru = ULONG_MAX;
+            hit_count++;
+            return;
+        }
+    }
+    // miss
+    miss_count++;
+    for (i=0; i<E; i++) {
+        if (!cache_set[i].valid) { // find empty
+            cache_set[i].valid = 1;
+            cache_set[i].tag = tag;
+            cache_set[i].lru = ULONG_MAX;
+            return;
+        }
+    }
+    //eviction
+    eviction_count++;
+    for (i=0; i<E; i++) {
+        if(cache_set[i].lru < eviction_lru){
+            eviction_line = i;
+            eviction_lru = cache_set[i].lru;
+        }
+    }
+
+    cache_set[eviction_line].tag = tag;
+    cache_set[eviction_line].lru = ULONG_MAX;
 
 }
 
@@ -125,8 +162,20 @@ void replayTrace(char* trace_fn)
     mem_addr_t addr=0;
     unsigned int len=0;
     FILE* trace_fp = fopen(trace_fn, "r");
-
-
+    if(trace_fp==NULL)return;
+    while(fgets(buf,1000,trace_fp)){
+        addr = strtol((char*)buf+3,NULL,16);
+        if(buf[0] == 'I'){
+            continue;
+        } else {
+            switch(buf[1]){
+                case 'L':accessData(addr);break;
+                case 'S':accessData(addr);break;
+                case 'M':accessData(addr);accessData(addr);break;
+                default:;
+            }
+        }
+    }
     fclose(trace_fp);
 }
 
