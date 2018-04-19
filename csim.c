@@ -114,7 +114,7 @@ void accessData(mem_addr_t addr)
     mem_addr_t set_index = (addr >> b) & set_index_mask;
     mem_addr_t tag = addr >> (s+b);
     cache_set_t cache_set = cache[set_index];
-
+//	printf("%x\n",addr);
     for(i=0; i<S; i++){
         for(int k=0; k<E; k++){
             if(cache[i][k].valid)cache[i][k].lru--;
@@ -122,7 +122,7 @@ void accessData(mem_addr_t addr)
     }
 
     for(i=0; i<E; i++) {
-        if (tag == cache_set[i].tag) { // hit
+        if (tag == cache_set[i].tag&&cache_set[i].valid) { // hit
             cache_set[i].lru = ULONG_MAX;
             hit_count++;
             return;
