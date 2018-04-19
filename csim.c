@@ -160,7 +160,7 @@ void replayTrace(char* trace_fn)
 {
     char buf[1000];
     mem_addr_t addr=0;
-    unsigned int len=0;
+//    unsigned int len=0;
     FILE* trace_fp = fopen(trace_fn, "r");
     if(trace_fp==NULL)return;
     while(fgets(buf,1000,trace_fp)){
