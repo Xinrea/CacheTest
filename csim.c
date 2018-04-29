@@ -115,10 +115,8 @@ void accessData(mem_addr_t addr)
     mem_addr_t tag = addr >> (s+b);
     cache_set_t cache_set = cache[set_index];
 //	printf("%x\n",addr);
-    for(i=0; i<S; i++){
-        for(int k=0; k<E; k++){
-            if(cache[i][k].valid)cache[i][k].lru--;
-        }
+    for(i=0; i<E; i++){
+        if(cache_set[i].valid)cache_set[i].lru--;
     }
 
     for(i=0; i<E; i++) {
